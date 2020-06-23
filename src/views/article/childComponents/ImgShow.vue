@@ -1,14 +1,18 @@
 <template>
   <div class="swp">
     <div class="swp-header">
-      <span class="swp-header_left">{{this.now +1 }} / {{imgs.length}}</span>
+      <span class="swp-header_left">{{ now + 1 }} / {{ imgs.length }}</span>
       <span class="swp-header_right" @click="goArticle">返回</span>
     </div>
     <div class="swp-main" ref="swpmain">
       <div class="img_card" v-for="item in sortedImgs" :key="item.id">
-        <img :src="imgBaseUrl + item.img_url" alt />
+        <div class="img_card_item">
+          <img :src="imgBaseUrl + item.img_url" alt />
+        </div>
       </div>
     </div>
+    <div v-show="left" @click="goLeft" class="swp_left">左箭头</div>
+    <div v-show="right" @click="goRight" class="swp_right">右箭头</div>
   </div>
 </template>
 
@@ -22,24 +26,33 @@ export default {
     return {
       imgBaseUrl: "http://localhost:3000",
       sortedImgs: [],
-      touchStart: 0,
-      distance: 0,
       pre: 0,
       now: 0,
       next: 0,
-      clientWidth: 0,
       count: 0,
-      left: true,
+      clientWidth: 0,
+      left: false,
       right: false
     };
   },
+//   computed: {
+//     nowId: function() {
+//       let indexNow = 0;
+//       for (let i = 0; i < this.imgs.length; i++) {
+//         if (this.imgId === this.imgs[i].img_id) {
+//           indexNow = i;
+//           break;
+//         }
+//       }
+//       return indexNow;
+//     }
+//   },
   created() {
     this.sortData();
     this.count = this.imgs.length;
   },
   mounted() {
     this.initData();
-    this.slide();
   },
   methods: {
     sortData() {
@@ -54,18 +67,21 @@ export default {
       this.sortedImgs = this.sortedImgs.concat(this.imgs.slice(0, imgIndex));
     },
     initData() {
-      this.clientWidth = document.documentElement.clientWidth;
+      this.clientWidth = document.querySelectorAll(".img_card")[0].clientWidth;
       const imgCard = document.querySelectorAll(".img_card");
       if (this.count === 1) {
         this.now = 0;
         imgCard[this.now].style.transform = "translateX(0px)";
       } else if (this.count === 2) {
+        this.left = true;
         this.now = 0;
         this.next = 1;
         imgCard[this.now].style.transform = "translateX(0px)";
         imgCard[this.next].style.transform =
           "translateX(" + this.clientWidth + "px)";
       } else {
+        this.left = true;
+        this.right = true;
         this.pre = imgCard.length - 1;
         this.now = 0;
         this.next = 1;
@@ -76,108 +92,26 @@ export default {
           "translateX(" + this.clientWidth + "px)";
       }
     },
-    slide() {
-      const swpmain = this.$refs.swpmain;
+    goLeft() {
+      console.log("左箭头被点击了1");
+
       const imgCard = document.querySelectorAll(".img_card");
-      swpmain.addEventListener("touchstart", e => {
-        if (this.count === 1) {
-          e.preventDefault();
-          return;
-        }
-        this.touchStart = e.targetTouches[0].clientX;
-      });
-      swpmain.addEventListener("touchmove", e => {
-        if (this.count === 1) {
-          e.preventDefault();
-          return;
-        }
-        this.distance = e.targetTouches[0].clientX - this.touchStart;
-        if (this.count === 2) {
-          if (this.now > this.next && this.right) {
-            //   this.right=!this.right;
-            if (this.distance > 0) {
-              imgCard[this.now].style.transform =
-                "translateX(" + this.distance + "px)";
-              imgCard[this.pre].style.transform =
-                "translateX(" + (-this.clientWidth + this.distance) + "px)";
-            }
-          }
-          if (this.pre >= this.now && this.left) {
-            if (this.distance < 0) {
-              imgCard[this.now].style.transform =
-                "translateX(" + this.distance + "px)";
-              imgCard[this.next].style.transform =
-                "translateX(" + (this.clientWidth + this.distance) + "px)";
-            }
-          }
-        } else {
-          if (this.distance > 0) {
-            imgCard[this.now].style.transform =
-              "translateX(" + this.distance + "px)";
-            imgCard[this.pre].style.transform =
-              "translateX(" + (-this.clientWidth + this.distance) + "px)";
-          }
-          if (this.distance < 0) {
-            imgCard[this.now].style.transform =
-              "translateX(" + this.distance + "px)";
-            imgCard[this.next].style.transform =
-              "translateX(" + (this.clientWidth + this.distance) + "px)";
-          }
-        }
-      });
-      swpmain.addEventListener("touchend", e => {
-        if (this.count === 1) {
-          e.preventDefault();
-          return;
-        }
-        if (this.count === 2) {
-          if (this.now > this.next && this.right) {
-            if (Math.abs(this.distance) > 50) {
-              if (this.distance > 0) {
-                this.showNext(imgCard);
-                this.left = true;
-                this.right = false;
-              }
-            } else if (this.distance < 50 && this.distance > 0) {
-              imgCard[this.now].style.transform = "translateX(0px)";
-              imgCard[this.pre].style.transform =
-                "translateX(" + -this.clientWidth + "px)";
-            }
-          }
-          if (this.pre >= this.now && this.left) {
-            if (Math.abs(this.distance) > 50) {
-              if (this.distance < 0) {
-                this.showPre(imgCard);
-                this.right = true;
-                this.left = false;
-              }
-            } else if (this.distance > -50 && this.distance < 0) {
-              imgCard[this.now].style.transform = "translateX(0px)";
-              imgCard[this.nex].style.transform =
-                "translateX(" + this.clientWidth + "px)";
-            }
-          }
-        } else if (Math.abs(this.distance) > 50) {
-          if (this.distance > 0) {
-            this.showNext(imgCard);
-            this.left = true;
-            this.right = false;
-          }
-          if (this.distance < 0) {
-            this.showPre(imgCard);
-            this.right = true;
-            this.left = false;
-          }
-        } else if (this.distance < 50 && this.distance > 0) {
-          imgCard[this.now].style.transform = "translateX(0px)";
-          imgCard[this.pre].style.transform =
-            "translateX(" + -this.clientWidth + "px)";
-        } else if (this.distance > -50 && this.distance < 0) {
-          imgCard[this.now].style.transform = "translateX(0px)";
-          imgCard[this.nex].style.transform =
-            "translateX(" + this.clientWidth + "px)";
-        }
-      });
+      this.showPre(imgCard);
+      if (this.count === 2 && this.now > this.next) {
+        this.left = false;
+        this.right = true;
+      }
+
+      //   const imgCard = document.querySelectorAll(".img_card");
+    },
+    goRight() {
+      console.log("右箭头被点击了2");
+      const imgCard = document.querySelectorAll(".img_card");
+      this.showNext(imgCard);
+      if (this.count === 2 && this.pre >= this.now) {
+        this.left = true;
+        this.right = false;
+      }
     },
     //往左走
     showPre(imgCard) {
@@ -237,19 +171,20 @@ export default {
   z-index: 999;
   .swp-header {
     background-color: #000;
-    height: 0.5rem;
-    line-height: 0.5rem;
+    height: 50px;
+    line-height: 50px;
+    display: flex;
     .swp-header_left {
+      flex: 1;
       color: #fff;
-      height: 0.3rem;
-      float: left;
-      margin-left: 0.3rem;
+      line-height: 50px;
+      text-align: center;
     }
     .swp-header_right {
       color: #fff;
-      height: 0.3rem;
+      line-height: 50px;
       float: right;
-      margin-right: 0.3rem;
+      margin-right: 30px;
     }
   }
   .swp-main {
@@ -258,17 +193,45 @@ export default {
     background-color: rgba(0, 0, 0, 0.3);
     overflow: hidden;
     position: relative;
-    text-align: center;
     .img_card {
-      width: 100%;
-      height: calc(100%-0.5rem);
+      width: 80%;
+      height: 100%;
       position: absolute;
       top: 0;
-      transform: translateX(200%);
-      img {
-        width: 100%;
+      left: 10%;
+      transform: translate(200%);
+      .img_card_item {
+        width: 80%;
+        height: 100%;
+        margin-left: 10%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        img {
+          transform: scale(1);
+          max-width: 100%;
+          max-height: 100%;
+        }
       }
     }
+  }
+  .swp_left,
+  .swp_right {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    line-height: 60px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .swp_left {
+    left: 50px;
+  }
+  .swp_right {
+    right: 50px;
   }
 }
 </style>

@@ -25,9 +25,8 @@
             </div>
             <div class="article-left_content">
               <p>{{ article.describe }}</p>
-              <div v-for="item in article.imgSrc"
-                  :key="item.id">
-                <img :src="imgBaseUrl+item.img_url" alt />
+              <div v-for="item in article.imgSrc" :key="item.id">
+                <img @click="goImgShow(item.img_id)" :src="imgBaseUrl+item.img_url" alt />
               </div>
               <!-- <img :src="imgBaseUrl+article.imgSrc" alt /> -->
             </div>
@@ -165,21 +164,26 @@
         <div class="article-main_actions"></div>
       </div>
     </div>
+    <ImgShow @change="changeImgShow" v-if="isShow" :imgs="article.imgSrc" :imgId="imgId"></ImgShow>
   </div>
 </template>
 
 <script>
 import OutsideHeader from "@/components/OutsideHeader.vue";
 import imgSrc from "../../assets/images/avatar30046.png";
+import ImgShow from "./childComponents/ImgShow.vue";
 import axios from "axios";
 
 export default {
   components: {
-    OutsideHeader
+    OutsideHeader,
+    ImgShow
   },
   data() {
     return {
       imgBaseUrl: "http://localhost:3000",
+      isShow: false,
+      imgId: 0,
       article: {
         sourceMode: "同人创作",
         title: "元旦快乐",
@@ -251,24 +255,31 @@ export default {
       ]
     };
   },
-  created(){
+  created() {
     this.getData();
   },
   methods: {
-    async getData(){
+    async getData() {
       // console.log(this.$route.params);
       // console.log(this.$route.path);
       await axios({
-        method: 'get',
-        url: 'http://localhost:3000'+this.$route.path,
+        method: "get",
+        url: "http://localhost:3000" + this.$route.path
         // params: {
         //   user_id: this.$route.params
         // }
-      }).then((res) => {
+      }).then(res => {
         this.article.title = res.data.title;
         this.article.describe = res.data.describe;
         this.article.imgSrc = res.data.imgs;
       });
+    },
+    goImgShow(id) {
+      this.isShow = true;
+      this.imgId = id;
+    },
+    changeImgShow() {
+      this.isShow = false;
     }
   }
 };
@@ -633,7 +644,6 @@ export default {
             margin-right: 10px;
           }
           span {
-
           }
         }
       }

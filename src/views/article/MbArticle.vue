@@ -47,19 +47,19 @@
         </div>
       </div>
     </div>
-    <ImgShow @change="changeImgShow" v-if="isShow" :imgs="article.imgSrc" :imgId="imgId"></ImgShow>
+    <MbImgShow @change="changeImgShow" v-if="isShow" :imgs="article.imgSrc" :imgId="imgId"></MbImgShow>
   </div>
 </template>
 
 <script>
 import MbHeader from "../../components/MbHeader.vue";
-import ImgShow from "./childComponents/ImgShow.vue";
+import MbImgShow from "./childComponents/MbImgShow.vue";
 import imgSrc from "../../assets/logo.png";
 import axios from "axios";
 export default {
   components: {
     MbHeader,
-    ImgShow
+    MbImgShow
   },
   data() {
     return {
@@ -222,7 +222,7 @@ export default {
         word-break: break-all;
       }
       .img-cards {
-        width: 100%;
+        max-width: 100%;
         margin-bottom: 0.1rem;
       }
       .img-topic {
