@@ -33,30 +33,48 @@
         <div class="form-item-container">
           <span class="form-item-container__lable">上传图片:</span>
           <div class="form-input-imgs">
-            <div class="form-input-imgs__add">
+            <div
+              class="input-imgs-show"
+              v-for="item in willUploadFile"
+              :key="item.id"
+              :style="{backgroundImage: 'url('+ item.tmpUrl+')'} "
+            >
+              <div class="img_close_btn" @click="imgShowCancel(item.imgIndex)">去除</div>
+            </div>
+            <div class="form-input-imgs__add" @click="upload">
               <div class="add__module">
                 <img src="../../assets/logo.png" alt />
                 <p>点击添加图片</p>
                 <p class="add__demand">最多可同时上传50张（支持格式jpg、png、jpeg、gif，宽高尺寸推荐大于420像素）</p>
+                <input
+                  id="fileToUpload"
+                  @change="inputChange"
+                  type="file"
+                  accept="image/gif, image/jpg, image/png, image/jpeg"
+                  multiple="multiple"
+                />
               </div>
-              <input
-                type="file"
-                accept="image/gif, image/jpg, image/png, image/jpeg"
-                multiple="multiple"
-              />
             </div>
           </div>
         </div>
       </div>
       <div class="new-article-publish">
-        <span class="publish__button">发布</span>
+        <span class="publish__button" @click="willPublish">发布</span>
       </div>
+    </div>
+    <div v-show="upLoadState" class="up-load-mask">
+      <div class="up-load-state">
+        <span class="state_left" @click="upContinue">继续上传</span>
+        <span class="state_right" @click="goHome">返回列表页</span>
+      </div>
+      
     </div>
   </div>
 </template>
 
 <script>
 import OutsideHeader from "@/components/OutsideHeader.vue";
+import axios from "axios";
 export default {
   name: "articleCreate",
   components: {
@@ -67,7 +85,12 @@ export default {
       tilteNumber: 0,
       imgDecNumber: 0,
       inputFlag: false,
-      textareaFlag: false
+      textareaFlag: false,
+      fileMaxCount: 50,
+      willUploadFile: [],
+      imgShowCancelFlag:false,
+      count:0,
+      upLoadState:false
     };
   },
   methods: {
@@ -84,6 +107,61 @@ export default {
       } else {
         this.textareaFlag = false;
       }
+    },
+    inputChange() {
+        let fileList = document.getElementById("fileToUpload").files;
+        if (fileList.length > this.fileMaxCount) {
+          alert("最多只能上传" + this.fileMaxCount + "张图");
+          return;
+        }
+        for (let i = 0; i < fileList.length; i++) {
+          let f = fileList[i]; 
+          let tmpUrl = window.URL.createObjectURL(f);
+          let imgIndex=this.count+i;
+          this.willUploadFile.push({ f, imgIndex, tmpUrl });
+        }
+        this.count+=fileList.length;
+    },
+    imgShowCancel(index) {
+      let sub=0;
+      for(let i=0;i<this.willUploadFile.length;i++){
+        if(this.willUploadFile[i].imgIndex===index){
+          sub=i;
+          break;
+        }
+      }
+      this.willUploadFile.splice(sub,1);
+    },
+    upload() {
+      const inputFile = document.getElementById("fileToUpload");
+      inputFile.click();
+    },
+    async willPublish() {
+      let fd = new FormData();
+      let title = document.querySelector(".input__value").value;
+      let describe = document.querySelector(".textarea__value").value;
+      fd.append("title", title);
+      fd.append("describe", describe);
+      for (let i = 0; i < this.willUploadFile.length; i++) {
+        fd.append("f1", this.willUploadFile[i].f); //支持多文件上传
+      }
+      await axios({
+        method: "POST",
+        url: "http://localhost:3000/post",
+        data:fd
+      }).then((res)=>{
+        // this.afterUpShow=res.data;
+        this.upLoadState=true;
+        console.log(res.data);
+      }).catch((e)=>{
+        console.log(e);
+      });
+    },
+    upContinue(){
+      this.upLoadState = false;
+    },
+    goHome(){
+      this.$router.push({path:"/"});
     }
   }
 };
@@ -152,6 +230,28 @@ export default {
           border: 1px solid #00c3ff;
         }
         .form-input-imgs {
+          display: flex;
+          flex-wrap: wrap;
+          .input-imgs-show {
+            width: 240px;
+            height: 180px;
+            margin-right: 50px;
+            margin-bottom: 20px;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+            .img_close_btn {
+              width: 40px;
+              height: 40px;
+              line-height: 40px;
+              text-align: center;
+              background-color: #fff;
+              border-radius: 50%;
+              position: absolute;
+              top: 10px;
+              right: 10px;
+            }
+          }
           .form-input-imgs__add {
             width: 200px;
             height: 140px;
@@ -195,6 +295,38 @@ export default {
         background-color: #4cc3ff;
       }
     }
+  }
+  .up-load-mask {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    background-color: rgba(0,0,0,0.4);
+    // text-align: center;
+    .up-load-state {
+      background-color: #fff;
+      width: 500px;
+      height: 300px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      text-align: center;
+      .state_left, .state_right {
+        margin-top: 120px;
+        display: inline-block;
+        background-color: #4cc3ff;
+        color: #fff;
+        height: 60px;
+        line-height: 60px;
+        width: 100px;
+        border-radius: 10px;
+      }
+      .state_left {
+        margin-right: 50px;
+      }
+    } 
   }
 }
 </style>
