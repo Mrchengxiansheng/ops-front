@@ -150,7 +150,6 @@ export default {
         url: "http://localhost:3000/post",
         data:fd
       }).then((res)=>{
-        // this.afterUpShow=res.data;
         this.upLoadState=true;
         console.log(res.data);
       }).catch((e)=>{

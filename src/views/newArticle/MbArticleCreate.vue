@@ -1,6 +1,11 @@
 <template>
   <div class="ops-new-article">
-    <MbHeader :isHome="hearder.isHome" :hearderTitle="hearder.title" :isPublish="hearder.isPublish"></MbHeader>
+    <MbHeader
+      @publish="willPublish"
+      :isHome="hearder.isHome"
+      :hearderTitle="hearder.title"
+      :isPublish="hearder.isPublish"
+    ></MbHeader>
     <div class="new-article-main">
       <div class="form-item-container" :class="[inputFlag ? 'active' : '']">
         <div class="form-input">
@@ -32,10 +37,20 @@
         <div class="form-input-imgs__add">
           <p class="img__demand">最多可同时上传50张（支持格式jpg、png、jpeg、gif，宽高尺寸推荐大于420像素）</p>
           <div class="img-cards clearfix">
-            <div class="img__add">
+            <div
+              class="input-imgs-show"
+              v-for="item in willUploadFile"
+              :key="item.id"
+              :style="{backgroundImage: 'url('+ item.tmpUrl+')'} "
+            >
+              <div class="img_close_btn" @click="imgShowCancel(item.imgIndex)">－</div>
+            </div>
+            <div class="img__add" @click="upload">
               <img src="../../assets/logo.png" alt />
               <p>添加图片</p>
               <input
+                id="fileToUpload"
+                @change="inputChange"
                 type="file"
                 accept="image/gif, image/jpg, image/png, image/jpeg"
                 multiple="multiple"
@@ -48,17 +63,31 @@
         <p>发布即同意上传协议</p>
       </div>
     </div>
+    <div v-show="upLoadState" class="up-load-mask">
+      <div class="up-load-state">
+        <div class="state_left">
+          <span @click="upContinue">继续上传</span>
+        </div>
+        <div class="state_right">
+          <span @click="goHome">返回列表页</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import MbHeader from "../../components/MbHeader.vue";
+import axios from "axios";
 export default {
   components: {
     MbHeader
   },
   data() {
     return {
+      fileMaxCount: 50,
+      willUploadFile: [],
+      upLoadState: false,
       hearder: {
         isHome: false,
         title: "图区",
@@ -84,6 +113,62 @@ export default {
       } else {
         this.textareaFlag = false;
       }
+    },
+    upload() {
+      const inputFile = document.getElementById("fileToUpload");
+      inputFile.click();
+    },
+    inputChange() {
+      let fileList = document.getElementById("fileToUpload").files;
+      if (fileList.length > this.fileMaxCount) {
+        alert("最多只能上传" + this.fileMaxCount + "张图");
+        return;
+      }
+      for (let i = 0; i < fileList.length; i++) {
+        let f = fileList[i];
+        let tmpUrl = window.URL.createObjectURL(f);
+        let imgIndex = this.count + i;
+        this.willUploadFile.push({ f, imgIndex, tmpUrl });
+      }
+      this.count += fileList.length;
+    },
+    imgShowCancel(index) {
+      let sub = 0;
+      for (let i = 0; i < this.willUploadFile.length; i++) {
+        if (this.willUploadFile[i].imgIndex === index) {
+          sub = i;
+          break;
+        }
+      }
+      this.willUploadFile.splice(sub, 1);
+    },
+    async willPublish() {
+      let fd = new FormData();
+      let title = document.querySelector(".input__value").value;
+      let describe = document.querySelector(".textarea__value").value;
+      fd.append("title", title);
+      fd.append("describe", describe);
+      for (let i = 0; i < this.willUploadFile.length; i++) {
+        fd.append("f1", this.willUploadFile[i].f); //支持多文件上传
+      }
+      await axios({
+        method: "POST",
+        url: "http://localhost:3000/post",
+        data: fd
+      })
+        .then(res => {
+          this.upLoadState = true;
+          console.log(res.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    },
+    upContinue() {
+      this.upLoadState = false;
+    },
+    goHome() {
+      this.$router.push({ path: "/mb" });
     }
   }
 };
@@ -115,7 +200,6 @@ export default {
           font-size: 0.14rem;
           height: 0.3rem;
           padding: 0.05rem 0;
-          color: #ccc;
         }
         .textarea__value {
           flex: 1;
@@ -146,6 +230,29 @@ export default {
         }
         .img-cards {
           padding: 0.1rem 0;
+          display: flex;
+          flex-wrap: wrap;
+          .input-imgs-show {
+            width: 0.9rem;
+            height: 0.9rem;
+            margin-right: 0.1rem;
+            margin-bottom: 0.1rem;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+            .img_close_btn {
+              width: 0.15rem;
+              height: 0.15rem;
+              color: #fff;
+              line-height: 0.15rem;
+              text-align: center;
+              background-color: #f00;
+              border-radius: 50%;
+              position: absolute;
+              top: 0.05rem;
+              right: 0.05rem;
+            }
+          }
           .img__add {
             background-color: #f5f5f5;
             width: 0.9rem;
@@ -171,8 +278,8 @@ export default {
         }
       }
     }
-    .form-item-container.active{
-        border-bottom: 1px solid #00c3ff;
+    .form-item-container.active {
+      border-bottom: 1px solid #00c3ff;
     }
     .form-img {
       border-bottom: 1px solid #ccc;
@@ -181,6 +288,40 @@ export default {
       p {
         font-size: 0.14rem;
         color: #ccc;
+      }
+    }
+  }
+  .up-load-mask {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    background-color: rgba(0, 0, 0, 0.4);
+    .up-load-state {
+      background-color: #fff;
+      border-radius: 0.2rem;
+      width: 70%;
+      height: 1.5rem;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      .state_left,
+      .state_right {
+        text-align: center;
+        span {
+          background-color: #4cc3ff;
+          display: inline-block;
+          color: #fff;
+          height: 0.4rem;
+          line-height: 0.4rem;
+          width: 1rem;
+          border-radius: 0.1rem;
+        }
+      }
+      .state_left {
+        margin: 0.3rem 0 0.1rem 0;
       }
     }
   }

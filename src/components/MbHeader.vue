@@ -9,7 +9,7 @@
     </div>
     <div class="header__back" :class="[isHome ? 'active' : '']" @click="goback">返回</div>
     <div class="mobile-header__name">{{ hearderTitle }}</div>
-    <div class="header__publish" :class="[isPublish ? '' : 'active']">发布</div>
+    <div  class="header__publish" :class="[isPublish ? '' : 'active']" @click="goPublish">发布</div>
   </div>
 </template>
 
@@ -29,6 +29,9 @@ export default {
     },
     goLogin() {
       this.$router.push({ path: "/mb/login" });
+    },
+    goPublish(){
+      this.$emit("publish");
     }
   }
 };
