@@ -39,6 +39,7 @@
           <div class="img-cards clearfix">
             <div
               class="input-imgs-show"
+              :class="[ item.loading ? '' : 'active']"
               v-for="item in willUploadFile"
               :key="item.id"
               :style="{backgroundImage: 'url('+ item.tmpUrl+')'} "
@@ -96,7 +97,8 @@ export default {
       tilteNumber: 0,
       imgDecNumber: 0,
       inputFlag: false,
-      textareaFlag: false
+      textareaFlag: false,
+      count: 0
     };
   },
   methods: {
@@ -128,7 +130,19 @@ export default {
         let f = fileList[i];
         let tmpUrl = window.URL.createObjectURL(f);
         let imgIndex = this.count + i;
-        this.willUploadFile.push({ f, imgIndex, tmpUrl });
+        this.willUploadFile.push({ f, imgIndex, tmpUrl, loading: false });
+        let img = new Image();
+        img.src = tmpUrl;
+        img.onload = () => {
+          let sub = 0;
+          for (let j = 0; j < this.willUploadFile.length; j++) {
+            if (this.willUploadFile[j].imgIndex === imgIndex) {
+              sub = j;
+              break;
+            }
+          }
+          this.willUploadFile[sub].loading = true;
+        };
       }
       this.count += fileList.length;
     },
@@ -252,6 +266,19 @@ export default {
               top: 0.05rem;
               right: 0.05rem;
             }
+          }
+          .input-imgs-show.active::after {
+            content: "上传中...";
+            font-size: 0.12rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.4);
           }
           .img__add {
             background-color: #f5f5f5;

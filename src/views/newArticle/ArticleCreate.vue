@@ -35,6 +35,7 @@
           <div class="form-input-imgs">
             <div
               class="input-imgs-show"
+              :class="[ item.loading ? '' : 'active']"
               v-for="item in willUploadFile"
               :key="item.id"
               :style="{backgroundImage: 'url('+ item.tmpUrl+')'} "
@@ -67,7 +68,6 @@
         <span class="state_left" @click="upContinue">继续上传</span>
         <span class="state_right" @click="goHome">返回列表页</span>
       </div>
-      
     </div>
   </div>
 </template>
@@ -88,9 +88,9 @@ export default {
       textareaFlag: false,
       fileMaxCount: 50,
       willUploadFile: [],
-      imgShowCancelFlag:false,
-      count:0,
-      upLoadState:false
+      imgShowCancelFlag: false,
+      count: 0,
+      upLoadState: false
     };
   },
   methods: {
@@ -109,28 +109,41 @@ export default {
       }
     },
     inputChange() {
-        let fileList = document.getElementById("fileToUpload").files;
-        if (fileList.length > this.fileMaxCount) {
-          alert("最多只能上传" + this.fileMaxCount + "张图");
-          return;
-        }
-        for (let i = 0; i < fileList.length; i++) {
-          let f = fileList[i]; 
-          let tmpUrl = window.URL.createObjectURL(f);
-          let imgIndex=this.count+i;
-          this.willUploadFile.push({ f, imgIndex, tmpUrl });
-        }
-        this.count+=fileList.length;
+      let fileList = document.getElementById("fileToUpload").files;
+      if (fileList.length > this.fileMaxCount) {
+        alert("最多只能上传" + this.fileMaxCount + "张图");
+        return;
+      }
+      for (let i = 0; i < fileList.length; i++) {
+        let f = fileList[i];
+        let tmpUrl = window.URL.createObjectURL(f);
+        let imgIndex = this.count + i;
+        console.log("imgIndex     " +imgIndex);
+        this.willUploadFile.push({ f, imgIndex, tmpUrl, loading: false });
+        let img = new Image();
+        img.src = tmpUrl;
+        img.onload = () => {
+          let sub = 0;
+          for (let j = 0; j < this.willUploadFile.length; j++) {
+            if (this.willUploadFile[j].imgIndex === imgIndex) {
+              sub = j;
+              break;
+            }
+          }
+          this.willUploadFile[sub].loading = true;
+        };
+      }
+      this.count += fileList.length;
     },
     imgShowCancel(index) {
-      let sub=0;
-      for(let i=0;i<this.willUploadFile.length;i++){
-        if(this.willUploadFile[i].imgIndex===index){
-          sub=i;
+      let sub = 0;
+      for (let i = 0; i < this.willUploadFile.length; i++) {
+        if (this.willUploadFile[i].imgIndex === index) {
+          sub = i;
           break;
         }
       }
-      this.willUploadFile.splice(sub,1);
+      this.willUploadFile.splice(sub, 1);
     },
     upload() {
       const inputFile = document.getElementById("fileToUpload");
@@ -148,19 +161,21 @@ export default {
       await axios({
         method: "POST",
         url: "http://localhost:3000/post",
-        data:fd
-      }).then((res)=>{
-        this.upLoadState=true;
-        console.log(res.data);
-      }).catch((e)=>{
-        console.log(e);
-      });
+        data: fd
+      })
+        .then(res => {
+          this.upLoadState = true;
+          console.log(res.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
     },
-    upContinue(){
+    upContinue() {
       this.upLoadState = false;
     },
-    goHome(){
-      this.$router.push({path:"/"});
+    goHome() {
+      this.$router.push({ path: "/" });
     }
   }
 };
@@ -251,6 +266,18 @@ export default {
               right: 10px;
             }
           }
+          .input-imgs-show.active::after{
+            content: "上传中...";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.4);
+          }
           .form-input-imgs__add {
             width: 200px;
             height: 140px;
@@ -301,7 +328,7 @@ export default {
     width: 100%;
     height: 100%;
     z-index: 2000;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.4);
     // text-align: center;
     .up-load-state {
       background-color: #fff;
@@ -310,9 +337,10 @@ export default {
       position: absolute;
       left: 50%;
       top: 50%;
-      transform: translate(-50%,-50%);
+      transform: translate(-50%, -50%);
       text-align: center;
-      .state_left, .state_right {
+      .state_left,
+      .state_right {
         margin-top: 120px;
         display: inline-block;
         background-color: #4cc3ff;
@@ -325,7 +353,7 @@ export default {
       .state_left {
         margin-right: 50px;
       }
-    } 
+    }
   }
 }
 </style>
