@@ -260,14 +260,9 @@ export default {
   },
   methods: {
     async getData() {
-      // console.log(this.$route.params);
-      // console.log(this.$route.path);
       await axios({
         method: "get",
         url: "http://localhost:3000" + this.$route.path
-        // params: {
-        //   user_id: this.$route.params
-        // }
       }).then(res => {
         this.article.title = res.data.title;
         this.article.describe = res.data.describe;
