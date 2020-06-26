@@ -7,14 +7,14 @@
         <div class="ops-img-card" v-for="item in imgCard" :key="item.id">
           <div @click="goToArticle(item.article_id)">
             <div class="ops-img-card__top">
-            <div
-              class="img-scale"
-              :style="{ backgroundImage: `url(${imgBaseUrl}${item.imgs[0].img_url})` }"
-            ></div>
-          </div>
-          <div class="ops-img-card__mid">
-            <span>{{ item.title }}</span>
-          </div>
+              <div
+                class="img-scale"
+                :style="{ backgroundImage: `url(${imgBaseUrl}${item.imgs[0].img_url})` }"
+              ></div>
+            </div>
+            <div class="ops-img-card__mid">
+              <span>{{ item.title }}</span>
+            </div>
           </div>
           <div class="ops-img-card__bottom">
             <div class="ops-img-card__bottom_user">
@@ -37,12 +37,8 @@
           <span class="ops-home-main-right__more">更多</span>
         </div>
         <div class="ops-home-main-right__body">
-          <div
-            class="ops-home-main-right__topic"
-            v-for="item in topic"
-            :key="item.id"
-          >
-            <img :src="item.topicAvatarImg" alt="" />
+          <div class="ops-home-main-right__topic" v-for="item in topic" :key="item.id">
+            <img :src="item.topicAvatarImg" alt />
             <span>{{ item.topicAvatarName }}</span>
           </div>
         </div>
@@ -53,7 +49,7 @@
 
 <script>
 // @ is an alias to /src
-import OutsideHeader from "@/components/OutsideHeader.vue"; 
+import OutsideHeader from "@/components/OutsideHeader.vue";
 import InsideHeader from "@/views/home/childComponents/InsideHeader.vue";
 import avatar from "../../assets/images/avatar30046.png";
 import axios from "axios";
@@ -66,12 +62,12 @@ export default {
   },
   data() {
     return {
-      avatar:avatar,
+      avatar: avatar,
       showState: false, //是否显示加载动画
-      hasMore: true,//加载的动画
+      hasMore: true, //加载的动画
       offset: 0,
       imgBaseUrl: "http://localhost:3000",
-      imgCard:[],
+      imgCard: [],
       topic: [
         {
           id: 1,
@@ -92,66 +88,62 @@ export default {
       LoginFlag: false
     };
   },
-  created(){
+  created() {
     this.getData();
   },
-  mounted(){
+  mounted() {
     this.bindSrcoll();
   },
   methods: {
-    async getData(){
+    async getData() {
       await axios({
-        method: 'get',
-        url: 'http://localhost:3000/',
+        method: "get",
+        url: "http://localhost:3000/",
         params: {
           offset: this.offset
         }
-      }).then((res) => {
+      }).then(res => {
         console.log(res.data);
-        if(res.data.hasMore){
-          this.offset+=10;
-          // for(let i in res.data.articleDataPart){
-          //   console.log(i);
-          //   console.log(res.data.articleDataPart[i]);
-          //   this.imgCard.push(res.data.articleDataPart[i]);
-          // }
-          this.imgCard=this.imgCard.concat(res.data.articleDataPart);
-          console.log(this.offset);
-          this.showState=false;
-          
-        }else {
-          this.hasMore=false;
-          this.showState=false;
-        } 
+        if (res.data.hasMore) {
+          this.offset += 10;
+          this.imgCard = this.imgCard.concat(res.data.articleDataPart);
+          this.showState = false;
+        } else {
+          this.hasMore = false;
+          this.showState = false;
+        }
       });
     },
-    goToArticle(article_id){
-      this.$router.push({name:'article', params:{id:article_id}});
+    goToArticle(article_id) {
+      this.$router.push({ name: "article", params: { id: article_id } });
     },
-    getMoreData(){
+    getMoreData() {
       //可滚动容器的高度
-      let innerHeight = document.querySelector('#app').clientHeight;
+      let innerHeight = document.querySelector("#app").clientHeight;
       //屏幕尺寸高度
       let outerHeight = document.documentElement.clientHeight;
       //可滚动容器超出当前窗口显示范围的高度
       let scrollTop = document.documentElement.scrollTop;
       //scrollTop在页面为滚动时为0，开始滚动后，慢慢增加，滚动到页面底部时，出现innerHeight < (outerHeight + scrollTop)的情况，严格来讲，是接近底部。
-      console.log(innerHeight + " " + outerHeight + " " + scrollTop);
-      if ( this.hasMore && !this.showState && innerHeight===(outerHeight + scrollTop)) {
-          //加载更多操作
-          this.showState=true;
-          console.log("loadmore");
-          this.getData();
-        }
+
+      if (
+        this.hasMore &&
+        !this.showState &&
+        innerHeight === outerHeight + scrollTop
+      ) {
+        //加载更多操作
+        this.showState = true;
+        this.getData();
+      }
     },
-    bindSrcoll () {
+    bindSrcoll() {
       this.unScroll();
-      window.addEventListener('scroll', this.getMoreData);
+      window.addEventListener("scroll", this.getMoreData);
     },
-    unScroll () {
-      window.removeEventListener('scroll', this.getMoreData);
+    unScroll() {
+      window.removeEventListener("scroll", this.getMoreData);
     },
-    beforeDestroy () {
+    beforeDestroy() {
       this.unScroll();
     }
   }
@@ -216,7 +208,7 @@ export default {
       }
       .more {
         text-align: center;
-        margin:20px 0 30px;
+        margin: 20px 0 30px;
       }
     }
     .ops-home-main-right {

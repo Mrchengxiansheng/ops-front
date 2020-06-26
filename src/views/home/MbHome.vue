@@ -298,6 +298,7 @@ export default {
     },
     goToArticle(article_id){
       this.$router.push({name:'mbArticle', params:{id:article_id}});
+      // this.$router.push({ name: "mbArticle", params: { id: article_id } });
     },
   }
 };

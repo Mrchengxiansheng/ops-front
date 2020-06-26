@@ -47,7 +47,7 @@ const routes = [
     path: "/mb/articleCreate",
     name: "MbArticleCreate",
     component: () =>
-      import(/* webpackChunkName: "articleCreate" */ "../views/newArticle/MbArticleCreate.vue")
+      import(/* webpackChunkName: "MbArticleCreate" */ "../views/newArticle/MbArticleCreate.vue")
   }
 ];
 
